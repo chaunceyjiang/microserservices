@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/gorilla/mux"
 	"log"
 	"microserservices/data"
@@ -65,7 +66,7 @@ func (p *Products) AddProducts(w http.ResponseWriter, r *http.Request) {
 	//	http.Error(w, "Unable to unmarshal json", http.StatusBadRequest)
 	//	return
 	//}
-	prod:=r.Context().Value(KeyProduct{}).(*data.Product)
+	prod := r.Context().Value(KeyProduct{}).(*data.Product)
 	data.AddProduct(prod)
 }
 
@@ -81,17 +82,11 @@ func (p *Products) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	// 加载变量
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
-	if err!=nil{
-		http.Error(w,"id convert error",http.StatusBadRequest)
+	if err != nil {
+		http.Error(w, "id convert error", http.StatusBadRequest)
 	}
 	p.l.Print("Handle Put Products")
-	prod := &data.Product{}
-	// r.Body 实现io.Reader
-	err = prod.FromJSON(r.Body)
-	if err != nil {
-		http.Error(w, "Unable to unmarshal json", http.StatusBadRequest)
-		return
-	}
+	prod := r.Context().Value(KeyProduct{}).(*data.Product)
 	if err = data.UpdateProduct(id, prod); errors.Is(err, data.ErrProductNotFind) {
 		http.Error(w, err.Error(), http.StatusOK)
 		return
@@ -105,10 +100,10 @@ func (p *Products) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 type KeyProduct struct {
-
 }
+
 // MiddlewareProductValidation 中间件
-func (p Products) MiddlewareProductValidation(next http.Handler) http.Handler{
+func (p Products) MiddlewareProductValidation(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		prod := &data.Product{}
 		// r.Body 实现io.Reader
@@ -117,11 +112,15 @@ func (p Products) MiddlewareProductValidation(next http.Handler) http.Handler{
 			http.Error(w, "Unable to unmarshal json", http.StatusBadRequest)
 			return
 		}
-
+		err = prod.Validate()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error Validate %s", err.Error()), http.StatusBadRequest)
+			return
+		}
 		// 重新构造新的请求,并且通过ctx 传递变量
-		ctx:= context.WithValue(r.Context(),KeyProduct{},prod)
-		req:=r.WithContext(ctx)
+		ctx := context.WithValue(r.Context(), KeyProduct{}, prod)
+		req := r.WithContext(ctx)
 		// 调用下一个handle,或者下一个中间件，或者终止
-		next.ServeHTTP(w,req)
+		next.ServeHTTP(w, req)
 	})
 }
