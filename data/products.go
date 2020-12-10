@@ -3,17 +3,19 @@ package data
 import (
 	"encoding/json"
 	"errors"
+	"gopkg.in/go-playground/validator.v9"
 	"io"
+	"regexp"
 	"time"
 )
 
 // 定义一个产品的结构体
 type Product struct {
 	ID          int     `json:"id"`
-	Name        string  `json:"name"`
+	Name        string  `json:"name" validate:"required"`
 	Description string  `json:"description"`
-	Price       float64 `json:"price"`
-	SKU         string  `json:"sku"`
+	Price       float64 `json:"price" validate:"gt=0"`
+	SKU         string  `json:"sku" validate:"required,sku"`
 	CreateOn    string  `json:"-"`
 	UpdateOn    string  `json:"-"`
 	DeleteOn    string  `json:"-"`
@@ -24,6 +26,24 @@ func (p *Product) FromJSON(r io.Reader) error {
 	e := json.NewDecoder(r)
 	return e.Decode(p)
 }
+
+func (p *Product) Validate() error {
+	validate:=validator.New()
+	validate.RegisterValidation("sku",validateSKU)
+	return validate.Struct(p)
+}
+// 自定一个验证器
+func validateSKU(fl validator.FieldLevel) bool {
+	// 比如 SKU abc-def-erf
+	reg:=regexp.MustCompile("[a-z]+-[a-z]+-[a-z]+")
+
+	matches:=reg.FindAllString(fl.Field().String(),-1)
+	if len(matches)!=1{
+		return false
+	}
+	return true
+}
+
 
 var productList = Products{
 	&Product{
