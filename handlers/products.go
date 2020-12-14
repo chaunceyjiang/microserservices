@@ -15,6 +15,20 @@ type Products struct {
 	l *log.Logger
 }
 
+// swagger:response Resp
+// Resp 返回统一封装
+type Resp struct {
+	// Required: true
+	// Code 状态码
+	Code int `json:"code"`
+	// Required: true
+	// Message 状态码
+	Message string `json:"message"`
+	// Required: true
+	// Data 状态码
+	Data interface{} `json:"data"`
+}
+
 func NewProducts(l *log.Logger) *Products {
 	return &Products{l: l}
 }
@@ -69,21 +83,40 @@ func (p *Products) AddProducts(w http.ResponseWriter, r *http.Request) {
 	prod := r.Context().Value(KeyProduct{}).(*data.Product)
 	data.AddProduct(prod)
 }
+// swagger:response ResponseProductsWrapper
+// ResponseProducts
+type ResponseProductsWrapper struct {
+	// in: body
+	Body []*Products
+}
 
-// getProducts 返回
+// swagger:route GET /products products listProducts
+//  返回商品详情
+// Responses:
+// 200: ResponseProductsWrapper
+
+// GetProducts 返回 商品详情
 func (p *Products) GetProducts(w http.ResponseWriter, r *http.Request) {
 	d := data.GetProducts()
 	if err := d.ToJSON(w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+// ErrIdConvertFail id 转化失败
+var ErrIdConvertFail = errors.New("id convert error")
 
+// swagger:route PUT /products/{id} products updateProducts
+//  返回商品详情
+// Responses:
+// 200: Resp
+
+// UpdateProduct 更新商品详情
 func (p *Products) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	// 加载变量
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, "id convert error", http.StatusBadRequest)
+		http.Error(w, ErrIdConvertFail.Error(), http.StatusBadRequest)
 	}
 	p.l.Print("Handle Put Products")
 	prod := r.Context().Value(KeyProduct{}).(*data.Product)

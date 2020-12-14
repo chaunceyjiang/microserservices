@@ -1,0 +1,90 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "微服务样例\n\nDocumentation for Product API",
+    "title": "Product API.",
+    "license": {
+      "name": "MIT",
+      "url": "http://opensource.org/licenses/MIT"
+    },
+    "version": "1.0.0"
+  },
+  "basePath": "/",
+  "paths": {
+    "/products": {
+      "get": {
+        "description": "返回商品详情",
+        "tags": [
+          "products"
+        ],
+        "operationId": "listProducts",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/ResponseProductsWrapper"
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "put": {
+        "description": "返回商品详情",
+        "tags": [
+          "products"
+        ],
+        "operationId": "updateProducts",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Resp"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Products": {
+      "description": "Products products",
+      "type": "object",
+      "x-go-package": "microserservices/models"
+    }
+  },
+  "responses": {
+    "Resp": {
+      "description": "",
+      "schema": {
+        "type": "object"
+      },
+      "headers": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Required: true\nCode 状态码"
+        },
+        "data": {
+          "description": "Required: true\nData 状态码"
+        },
+        "message": {
+          "type": "string",
+          "description": "Required: true\nMessage 状态码"
+        }
+      }
+    },
+    "ResponseProductsWrapper": {
+      "description": "",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Products"
+        }
+      }
+    }
+  }
+}

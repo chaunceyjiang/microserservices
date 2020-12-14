@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 	"log"
 	"microserservices/handlers"
@@ -33,7 +34,10 @@ func main() {
 	// 给路由增加中间件
 	putRouter.Use(hh.MiddlewareProductValidation)
 
-
+	opts := middleware.RedocOpts{SpecURL: "/swagger.json"}
+	sh:=middleware.Redoc(opts,nil)
+	getRouter.Handle("/docs",sh)
+	getRouter.Handle("/swagger.json",http.FileServer(http.Dir("./")))
 	s :=http.Server{
 		Addr: ":9000",
 		// 传 mux ，可以处理多个handle
