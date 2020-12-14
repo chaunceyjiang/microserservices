@@ -15,19 +15,6 @@ type Products struct {
 	l *log.Logger
 }
 
-// swagger:response Resp
-// Resp 返回统一封装
-type Resp struct {
-	// Required: true
-	// Code 状态码
-	Code int `json:"code"`
-	// Required: true
-	// Message 状态码
-	Message string `json:"message"`
-	// Required: true
-	// Data 状态码
-	Data interface{} `json:"data"`
-}
 
 func NewProducts(l *log.Logger) *Products {
 	return &Products{l: l}
@@ -82,6 +69,13 @@ func (p *Products) AddProducts(w http.ResponseWriter, r *http.Request) {
 	//}
 	prod := r.Context().Value(KeyProduct{}).(*data.Product)
 	data.AddProduct(prod)
+	resp:=&Resp{
+		Code:    200,
+		Message: "添加成功",
+		Data:    nil,
+	}
+	//w.WriteHeader(200)
+	resp.ToJSON(w)
 }
 // swagger:response ResponseProductsWrapper
 // ResponseProducts
